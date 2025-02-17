@@ -20,7 +20,7 @@ class ConexionCliente(socket.socket):
 
             raise TypeError("La direccion IPv4 del servidor debe de ser especificada como un string.")
 
-        elif regex.match(direccion_IPv4_servidor) == None:
+        elif ConexionCliente.regex.match(direccion_IPv4_servidor) == None:
 
             raise ValueError("La direccion IP proporcionada debe de ser una direccion IPv4.")
 
@@ -68,9 +68,11 @@ class ConexionCliente(socket.socket):
 
         with open(self.ruta_imagen, "rb") as fichero_imagen:
 
-            self.bytes_imagen = fiche_imagen.read()
+            self.bytes_imagen = fichero_imagen.read()
 
             self.numero_bytes_imagen = len(self.bytes_imagen)
+
+        print(f"Numeros de bytes que tiene la imagen, {self.numero_bytes_imagen}")
 
 
     def establecer_conexion(self):
@@ -91,7 +93,7 @@ class ConexionCliente(socket.socket):
             
             #Representamos de manera binaria el tamaño de la imagen en un maximo de 4 bytes, con un formto Big Endian.
 
-            dimension_imagen = numero_bytes_imagen.to_bytes(4, "big")
+            dimension_imagen = self.numero_bytes_imagen.to_bytes(4, "big")
 
             #La razon del uso de la representacion Big Endian se sustenta en que el protocolo TCP específica de manera rigurosa
             #que la transferencia de datos que sean integrados en multiples bytes debe de realizarse en este tipo de endianess.
@@ -103,24 +105,31 @@ class ConexionCliente(socket.socket):
 
             #Enviamos todos los bytes que conforman al servidor para su procesamiento.
 
-            self.sendall(self.bytes_imagen)
+            print("Inciando")
+
+            resultado = self.sendall(self.bytes_imagen)
+
+
+            print("Finalizado envio")
+
+
+            print(f"Numero de bytes transferidos: {len(self.bytes_imagen)}", resultado)
 
 
     def recibir_imagen_procesada(self):
 
-        bytes_nueva_imagen = None
+        bytes_nueva_imagen = bytes()
 
         bytes_recibidos = 0
 
         while bytes_recibidos < self.numero_bytes_imagen:
 
-            chunk = self.recv(self.numero_bytes_imagen)
+            bytes_nueva_imagen += self.recv(self.numero_bytes_imagen)
 
-            bytes_recibidos += len(chunk)
+            bytes_recibidos = len(bytes_nueva_imagen)
 
-            bytes_nueva_imagen += chunk
+            print(f"Bytes recibidos desde el servidor: {bytes_recibidos}")
 
-        
 
     def guardar_imagen_procesada(self, bytes_nueva_imagen):
 
